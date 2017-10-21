@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <form action="/show_account/" method="POST">
+            <input type="submit" name="submit" value="管理端"/>
+        </form>
+
+        <form action="/account/" method="POST">
+            <p></p>
+
+            <p></p>
+            Account:&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="account"/>
+            <p></p>
+            Password:&nbsp;&nbsp;<input type="password" name="password"/>
+            <p></p>
+            修改密码验证码: <input type="text" name="idencode"/>
+            <p></p>
+
+            <p></p><p></p>
+
+            <input type="submit" name="submit" value="Login"/>
+            &nbsp;
+            <input type="submit" name="submit" value="Register"/>
+            &nbsp;
+            <input type="submit" name="submit" value="PasswordForget"/>
+            &nbsp;
+            <input type="submit" name="submit" value="PasswordChange"/>
+        </form>
+
+        <p>{{ info }} </p>
+    </body>
+</html>
