@@ -68,10 +68,6 @@ def register(request):
             return render(request, "account.html", {"info": account_feedback["password_blank"], "mode": account_mode["register"]})
 
         pos_at = True if ("@" in username) else False
-        print(pos_at)
-        print("Begin")
-        print(re.match(r"^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\d{8}$", username))
-        print("End")
         if not pos_at and re.match(r"^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\d{8}$", username) is None \
                 or pos_at and re.match(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$", username) is None:
             return render(request, "account.html", {"info": account_feedback["username_wrong"], "mode": account_mode["register"]})
@@ -172,13 +168,9 @@ def password_forget(request):
         # 验证信息发送到phone/email，等待核实
 
         if pos_at:
-            user = list(User.objects.filter(email=username))[0]
-            user.password = pwd
-            user.save()
+            User.objects.filter(email=username).update(password=pwd)
         else:
-            user = list(User.objects.filter(phone=username))[0]
-            user.password = pwd
-            user.save()
+            User.objects.filter(phone=username).update(password=pwd)
         request.session["username"] = username
         return HttpResponseRedirect(reverse("main_page"))
 
