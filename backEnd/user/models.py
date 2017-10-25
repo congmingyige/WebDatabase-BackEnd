@@ -1,6 +1,7 @@
 from django.db import models
 from re import match, compile
 
+
 class User(models.Model):
     '''Table of user data
 
