@@ -31,7 +31,7 @@ class Comment(models.Model):
         return '<Comment %r@%r>' % (self.author,self.id)
 
     def __repr__(self):
-        return '<Article %r@%r>' % (self.author,self.id)
+        return '<Comment %r@%r>' % (self.author,self.id)
 
 
 class Article(models.Model):
