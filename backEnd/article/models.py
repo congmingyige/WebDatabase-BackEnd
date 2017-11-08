@@ -18,8 +18,11 @@ class Comment(models.Model):
         article: declare the relationship with the corresponding article
     '''
 
+    # CharField : small     TextField : large, no limit
     content = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    # 要进行关联的表名 , 当删除关联表中的数据时，当前表与其关联的行的行为 : 删除关联数据，与之关联也删除
+    author = models.ForeignKey(User, on_delete=models.CASCADE)  # 外键, 一对一
+    # auto_now_add为添加时的时间，更新对象时不会有变动。
     time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -31,7 +34,7 @@ class Comment(models.Model):
         return '<Comment %r@%r>' % (self.author,self.id)
 
     def __repr__(self):
-        return '<Comment %r@%r>' % (self.author,self.id)
+        return '<Article %r@%r>' % (self.author,self.id)
 
 
 class Article(models.Model):
@@ -47,18 +50,20 @@ class Article(models.Model):
         text: the content of the main body
         comments: All the comments in this article (a ManyToMany relationship)
         views: number of people who have viewed this article
-        liked: number of people who liked this acticle
+        liked: number of people who liked this article
     '''
 
     title = models.CharField(max_length=64)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
     text = models.TextField(null=True)
-    comments = models.ManyToManyField(Comment)
-    views = models.PositiveIntegerField(null=True)
-    liked = models.PositiveIntegerField(null=True)
+    comments = models.ManyToManyField(Comment)  # 多对多
+    views = models.PositiveIntegerField(default=0)
+    liked = models.PositiveIntegerField(default=0)
 
+    # 元数据
     class Meta:
+        # 自定义数据库表名
         db_table = 'article_data'
         # bind them together to build the primary key
         unique_together = (("title", "author"),)

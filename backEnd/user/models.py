@@ -1,4 +1,6 @@
 from django.db import models
+from re import match, compile
+
 
 class User(models.Model):
     '''Table of user data
@@ -6,7 +8,6 @@ class User(models.Model):
     The model of user data, designed for the Login/Register test.
 
     Attributes:
-        (ID): unique key to identify
         phone: 11 digit phone number
         email: e-Mail address
         password: the password of the account
