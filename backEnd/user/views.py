@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from user.models import User
 from backEnd import urls
 import re
+import json
 
 account_code = {
     "not_POST": 100,
@@ -15,7 +16,8 @@ account_code = {
     "register_success": 110,
     "login_success": 120,
     "reset_password_success": 130,
-    "logout_success": 140
+    "logout_success": 140,
+    "options_request": 150
 }
 
 
@@ -30,8 +32,9 @@ account_code = {
 def register(request):
     if request.method == 'POST':
         #   get username and password from POST request
-        username = request.POST.get('username')
-        pwd = request.POST.get('password')
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
 
         #   judge phone number or e-mail address, then check the validity of username
         if "@" in username:
@@ -64,7 +67,12 @@ def register(request):
         response.set_cookie("username", username, max_age=1800)
         return response
     #   not a POST request
-    return HttpResponse(account_code['not_POST'], content_type="text/plain")
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
 
 
 '''
@@ -77,8 +85,9 @@ def register(request):
 def login(request):
     if request.method == 'POST':
         #   get username and password from POST request
-        username = request.POST.get('username')
-        pwd = request.POST.get('password')
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
 
         #   judge phone number or e-mail address, then check the validity of username
         if "@" in username:
@@ -108,8 +117,12 @@ def login(request):
         response.set_cookie("username", username, max_age=1800)
         return response
     #   not a POST request
-
-    return HttpResponse(account_code['not_POST'], content_type="text/plain")
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
 
 
 '''
@@ -119,8 +132,9 @@ def login(request):
 def password_forget(request):
     if request.method == 'POST':
         #   get username and password from POST request
-        username = request.POST.get('username')
-        pwd = request.POST.get('password')
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
 
         #   judge phone number or e-mail address, then check the validity of username
         if "@" in username:
@@ -150,7 +164,12 @@ def password_forget(request):
         response.set_cookie("username", username, max_age=1800)
         return response
     #   not a POST request
-    return HttpResponse(account_code['not_POST'], content_type="text/plain")
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
 
 
 '''
@@ -162,6 +181,12 @@ def logout(request):
         response = HttpResponse(account_code['logout_success'], content_type="text/plain")
         response.delete_cookie('username')
         return response
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
 
 
 
