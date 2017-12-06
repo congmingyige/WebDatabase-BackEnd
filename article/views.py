@@ -25,8 +25,9 @@ return_code = {
     'article_update_success': 123,
     'article_liked_success': 124,
     'article_not_liked_success': 125,
-    'article_user_show_success': 126
-
+    'article_user_show_success': 126,
+    'comment_create_success': 127,
+    'comment_delete_success': 128
 }
 
 
@@ -50,7 +51,22 @@ def article_comment_show(request, id_article):
         article = Article.objects.filter(id=id_article)
         if article:
             # choose not put 'comments' into article.values_list
-            new_article_comments = article[0].comments.all().values_list('id', 'author__phone', 'author__email', 'time', 'content')
+            # new_article_comments = article[0].comments.all().values_list('id', 'author__phone', 'author__email', 'time', 'content')
+            article_comments = article[0].comments.all()
+            print('ok')
+            new_article_comments = []
+            for new_comment in article_comments:
+                dict = {}
+                dict['id'] = new_comment.id
+                if new_comment.author__phone is None:
+                    dict['user'] = new_comment.author__email
+                else:
+                    dict['']
+                print('ok')
+                new_article_comments.append(dict)
+            print(new_article_comments)
+            print('ok')
+            return
             new_article = article.values_list('title', 'author__phone', 'author__email', 'time', 'text', 'views', 'liked')
             return HttpResponse(json.dumps({'article': list(new_article), 'article_comments': list(new_article_comments)
                                             }, cls=Article.CJsonEncoder))
@@ -88,8 +104,6 @@ def author_moments(request, id_author):
 
 # create article
 def article_create(request):
-    test()
-    return
     if request.method == 'POST':
         data = json.loads(request.body)
         title = data['title']
@@ -165,15 +179,13 @@ def article_not_liked(request, id_article):
 def comment_create(request, id_article):
     if request.method == 'POST':
         data = json.loads(request.body)
-        id_article = data['id_article']
         article = Article.objects.filter(id=id_article)
         if article:
             author = User.objects.filter(id=1)  # change!!!
             content = data['content']
             comment = Comment(author=author[0], content=content)
             comment.save()
-            article[0].comments.add(comment[0])
-
+            article[0].comments.add(comment)
             comment.save()
             return HttpResponse(return_code['comment_create_success'], content_type="text/plain")
         # comment existed
@@ -196,32 +208,17 @@ def comment_delete(request, id_comment):
 
 
 def test():
-    '''
-    article = Article.objects.filter(id=1)
-    print(type(article))
-    print(type(article[0]))
-    author = User.objects.filter(id=1)
-    comment = Comment(author=author[0], content='2342')
-    print('ok')
-    print(type(comment))
-    '''
-
-
-    #comment = Comment.objects.filter(id=29)
-    # article[0].comments.add(comment[0])
-    # comment = Comment.objects.filter(id=30)
-    # print('ok')
-    # article[0].comments.add(comment[0])
-
-
-
 
     '''
-    comment = Comment(author_id=1, content='ok')
-    comment.save()
-    comment = Comment(author_id=1, content='great')
-    comment.save()
+    article = Article.objects.filter(id=2)
+    comment = Comment.objects.filter(id=1)
+    print(comment)
+    print(type(comment[0]))
+    article[0].comments.add(comment[0])
+    comment = Comment.objects.filter(id=2)
+    article[0].comments.add(comment[0])
     '''
+
 
     # return HttpResponse(json.dumps({'article': serializers.serialize("json", article)}))
 
