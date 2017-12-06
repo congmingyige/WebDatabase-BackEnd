@@ -53,22 +53,19 @@ def article_comment_show(request, id_article):
             # choose not put 'comments' into article.values_list
             # new_article_comments = article[0].comments.all().values_list('id', 'author__phone', 'author__email', 'time', 'content')
             article_comments = article[0].comments.all()
-            print('ok')
             new_article_comments = []
             for new_comment in article_comments:
-                dict = {}
-                dict['id'] = new_comment.id
-                if new_comment.author__phone is None:
-                    dict['user'] = new_comment.author__email
+                dict_comment = {}
+                dict_comment['id'] = new_comment.id
+                if new_comment.author.phone is None:
+                    dict_comment['author'] = new_comment.author.email
                 else:
-                    dict['']
-                print('ok')
-                new_article_comments.append(dict)
-            print(new_article_comments)
-            print('ok')
-            return
+                    dict_comment['author'] = new_comment.author.phone
+                dict_comment['time'] = new_comment.time
+                dict_comment['content'] = new_comment.content
+                new_article_comments.append(dict_comment)
             new_article = article.values_list('title', 'author__phone', 'author__email', 'time', 'text', 'views', 'liked')
-            return HttpResponse(json.dumps({'article': list(new_article), 'article_comments': list(new_article_comments)
+            return HttpResponse(json.dumps({'article': list(new_article), 'article_comments': new_article_comments
                                             }, cls=Article.CJsonEncoder))
         # article not existed
         return HttpResponse(return_code['article_not_existed'], content_type="text/plain")
@@ -210,17 +207,22 @@ def comment_delete(request, id_comment):
 def test():
 
     '''
-    article = Article.objects.filter(id=2)
-    comment = Comment.objects.filter(id=1)
-    print(comment)
-    print(type(comment[0]))
-    article[0].comments.add(comment[0])
-    comment = Comment.objects.filter(id=2)
-    article[0].comments.add(comment[0])
+    author = User.objects.filter(id=3)
+    Comment.objects.create(author=author[0], content='haha')
     '''
 
 
+    article = Article.objects.filter(id=1)
+    comment = Comment.objects.filter(id=29)
+    article[0].comments.add(comment[0])
+    comment = Comment.objects.filter(id=30)
+    article[0].comments.add(comment[0])
+    comment = Comment.objects.filter(id=42)
+    article[0].comments.add(comment[0])
+
+
     # return HttpResponse(json.dumps({'article': serializers.serialize("json", article)}))
+
 
     '''
     print(request.GET)
