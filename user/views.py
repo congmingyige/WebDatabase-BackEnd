@@ -1,28 +1,193 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect,HttpResponse
-from django.shortcuts import HttpResponse
+from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from user.models import User
 from backEnd import urls
 import re
+import json
 
-# Test in tests.py
-
-account_feedback = {
-        "username_blank":       "Please input username",
-        "password_blank":       "Please input password",
-        "username_exist":       "username has existed",
-        "username_non-existent": "username has not existed",
-        "username_wrong":       "Wrong username, it is neither phone nor email",
-        "password_wrong":       "Wrong password, the length of password must be not less than 6 and not more than 64",
-        "account_wrong":        "username or password wrong"
+account_code = {
+    "not_POST": 100,
+    "username_invalid": 101,
+    "password_invalid": 102,
+    "username_existed": 103,  #for register
+    "username_not_existed": 105,  #for login
+    "password_error": 106,
+    "register_success": 110,
+    "login_success": 120,
+    "reset_password_success": 130,
+    "logout_success": 140,
+    "options_request": 150
 }
 
-account_mode = {
-        "register":         "register",
-        "login":            "login",
-        "password_forget": "password_forget"
-}
+
+'''
+1.//注册账号
+  账号重名检测[注意账号类别]
+  数据有效性、规范检测
+  异常捕获
+  存入数据库中
+  返回登录信息
+'''
+def register(request):
+    if request.method == 'POST':
+        #   get username and password from POST request
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
+
+        #   judge phone number or e-mail address, then check the validity of username
+        if "@" in username:
+            at_existed = True
+            pattern = re.compile(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$")
+        else:
+            at_existed = False
+            pattern = re.compile(r"^\d{11}$")
+        if re.match(pattern, username) is None:
+            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+        #   check the validity of password
+        if not 6 <= len(pwd) <= 64:
+            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+
+        #   check up whether the account has existed
+        if at_existed:
+            new_user = User.objects.filter(email=username)
+        else:
+            new_user = User.objects.filter(phone=username)
+        if new_user:
+            return HttpResponse(account_code['username_existed'], content_type="text/plain")
+        else:
+            #   create a new user in the database
+            if at_existed:
+                User.objects.create(email=username, password=pwd)
+            else:
+                User.objects.create(phone=username, password=pwd)
+
+        response = HttpResponse(account_code['register_success'], content_type="text/plain")
+        response.set_cookie("username", username, max_age=1800)
+        return response
+    #   not a POST request
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+
+
+'''
+2.//登陆
+  账号存在检测[注意账号类别]
+  密码匹配
+  异常捕获
+  返回登陆信息
+'''
+def login(request):
+    if request.method == 'POST':
+        #   get username and password from POST request
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
+
+        #   judge phone number or e-mail address, then check the validity of username
+        if "@" in username:
+            at_existed = True
+            pattern = re.compile(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$")
+        else:
+            at_existed = False
+            pattern = re.compile(r"^\d{11}$")
+        if re.match(pattern, username) is None:
+            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+        #   check the validity of password
+        if not 6 <= len(pwd) <= 64:
+            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+
+        #   check up whether the account has existed
+        if at_existed:
+            new_user = User.objects.filter(email=username)
+        else:
+            new_user = User.objects.filter(phone=username)
+        if not new_user:
+            return HttpResponse(account_code['username_not_existed'], content_type="text/plain")
+        else:
+            if new_user[0].password != pwd:
+                return HttpResponse(account_code['password_error'], content_type="text/plain")
+
+        response = HttpResponse(account_code['login_success'], content_type="text/plain")
+        response.set_cookie("username", username, max_age=1800)
+        return response
+    #   not a POST request
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+
+
+'''
+ 3.//忘记密码
+   与注册账号类似
+'''
+def password_forget(request):
+    if request.method == 'POST':
+        #   get username and password from POST request
+        post = json.loads(request.body)
+        username = post['username']
+        pwd = post['password']
+
+        #   judge phone number or e-mail address, then check the validity of username
+        if "@" in username:
+            at_existed = True
+            pattern = re.compile(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$")
+        else:
+            at_existed = False
+            pattern = re.compile(r"^\d{11}$")
+        if re.match(pattern, username) is None:
+            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+        #   check the validity of password
+        if not 6 <= len(pwd) <= 64:
+            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+
+        #   check up whether the account has existed
+        if at_existed:
+            new_user = User.objects.filter(email=username)
+        else:
+            new_user = User.objects.filter(phone=username)
+        if not new_user:
+            return HttpResponse(account_code['username_not_existed'], content_type="text/plain")
+        else:
+            #   update the password
+            new_user.update(password=pwd)
+
+        response = HttpResponse(account_code['reset_password_success'], content_type="text/plain")
+        response.set_cookie("username", username, max_age=1800)
+        return response
+    #   not a POST request
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+
+
+'''
+  4.登出功能
+  移除用户的Cookies
+'''
+def logout(request):
+    if request.method == 'POST':
+        response = HttpResponse(account_code['logout_success'], content_type="text/plain")
+        response.delete_cookie('username')
+        return response
+    elif request.method == 'OPTIONS':
+        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+    else:
+        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+
 
 
 '''
@@ -44,151 +209,3 @@ return value:
 2. .objects.filter: [] or others
 3. request.POST.get("x", y): y or others
 '''
-
-'''
-1.//注册账号
-  账号重名检测[注意账号类别]
-  数据有效性、规范检测
-  异常捕获
-  存入数据库中
-  返回登录信息
-'''
-
-
-def register(request):
-    if request.method == 'POST':
-        username = request.POST.get('username', None)
-        pwd = request.POST.get('password', None)
-
-        if username is None or pwd is None:
-            return render(request, "account.html", {"info": "", "mode": account_mode["register"]})
-        if username == "":
-            return render(request, "account.html", {"info": account_feedback["username_blank"], "mode": account_mode["register"]})
-        if pwd == "":
-            return render(request, "account.html", {"info": account_feedback["password_blank"], "mode": account_mode["register"]})
-
-        pos_at = True if ("@" in username) else False
-        if not pos_at and re.match(r"^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\d{8}$", username) is None \
-                or pos_at and re.match(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$", username) is None:
-            return render(request, "account.html", {"info": account_feedback["username_wrong"], "mode": account_mode["register"]})
-
-        if not 6 <= len(pwd) <= 64:
-            return render(request, "account.html", {"info": account_feedback["password_wrong"], "mode": account_mode["register"]})
-
-        if not pos_at and User.objects.filter(phone=username) \
-                or pos_at and User.objects.filter(email=username):
-            return render(request, "account.html", {"info": account_feedback["username_exist"], "mode": account_mode["register"]})
-
-        # 验证信息发送到phone/email，等待核实
-
-        if pos_at:
-            User.objects.create(email=username, password=pwd)
-        else:
-            User.objects.create(phone=username, password=pwd)
-
-        response = HttpResponseRedirect(reverse("main_page"))
-        response.set_cookie("username", username)
-        return response
-
-    return render(request, "account.html", {"info": "", "mode": account_mode["register"]})
-
-
-'''
-2.//登陆
-  账号存在检测[注意账号类别]
-  密码匹配
-  异常捕获
-  返回登陆信息
-'''
-
-
-def login(request):
-    if request.method == 'POST':
-        username = request.POST.get("username", None)
-        pwd = request.POST.get("password", None)
-
-        if username is None or pwd is None:
-            return render(request, "account.html", {"info": "", "mode": account_mode["login"]})
-        if username == "":
-            return render(request, "account.html", {"info": account_feedback["username_blank"], "mode": account_mode["login"]})
-        if pwd == "":
-            return render(request, "account.html", {"info": account_feedback["password_blank"], "mode": account_mode["login"]})
-
-        pos_at = True if ("@" in username) else False
-        if not pos_at and re.match(r"^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\d{8}$", username) is None \
-                or pos_at and re.match(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$", username) is None:
-            return render(request, "account.html", {"info": account_feedback["username_wrong"], "mode": account_mode["login"]})
-
-        if not 6 <= len(pwd) <= 64:
-            return render(request, "account.html", {"info": account_feedback["password_wrong"], "mode": account_mode["login"]})
-
-        if not pos_at and User.objects.filter(phone=username, password=pwd) \
-                or pos_at and User.objects.filter(email=username, password=pwd):
-            # admin 页面
-            if username == "1@qq.com":
-                user_list = User.objects.all()
-                return render(request, "account_show.html", {"data": user_list})
-
-            response = HttpResponseRedirect(reverse("main_page"))
-            response.set_cookie("username", username)
-            return response
-        else:
-            return render(request, "account.html", {"info": account_feedback["account_wrong"], "mode": account_mode["login"]})
-
-    return render(request, "account.html", {"info": "", "mode": account_mode["login"]})
-
-
-'''
- 3.//忘记密码
-   与注册账号类似
-'''
-
-
-def password_forget(request):
-    if request.method == 'POST':
-        username = request.POST.get("username", None)
-        pwd = request.POST.get("password", None)
-
-        if username is None or pwd is None:
-            return render(request, "account.html", {"info": "", "mode": account_mode["password_forget"]})
-        if username == "":
-            return render(request, "account.html", {"info": account_feedback["username_blank"], "mode": account_mode["password_forget"]})
-        if pwd == "":
-            return render(request, "account.html", {"info": account_feedback["password_blank"], "mode": account_mode["password_forget"]})
-
-        pos_at = True if ("@" in username) else False
-        if not pos_at and re.match(r"^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\d{8}$", username) is None \
-                or pos_at and re.match(r"^[-_\w\.]{0,64}@([-\w]{1,63}\.)*[-\w]{1,63}$", username) is None:
-            return render(request, "account.html", {"info": account_feedback["username_wrong"], "mode": account_mode["password_forget"]})
-
-        if not 6 <= len(pwd) <= 64:
-            return render(request, "account.html", {"info": account_feedback["password_wrong"], "mode": account_mode["password_forget"]})
-
-        if not pos_at and not User.objects.filter(phone=username) \
-                or pos_at and not User.objects.filter(email=username):
-            return render(request, "account.html", {"info": account_feedback["username_non-existent"], "mode": account_mode["password_forget"]})
-
-        # 验证信息发送到phone/email，等待核实
-
-        if pos_at:
-            User.objects.filter(email=username).update(password=pwd)
-        else:
-            User.objects.filter(phone=username).update(password=pwd)
-
-        response = HttpResponseRedirect(reverse("main_page"))
-        response.set_cookie("username", username)
-        return response
-
-    return render(request, "account.html", {"info": "", "mode": account_mode["password_forget"]})
-
-
-'''
- 4.//与前端vue.js 的表单功能结合
-   探讨如何将网页表单数据传送到后端
-   Django中的视图中，方法接收到的request对象有什么成员属性?如何利用?
-   (使用vue.js的form 还是 Django的form 或者是其它解决方案?)
-'''
-
-
-def main_page(request):
-    return render(request, "main_page.html", {"username": request.COOKIES["username"]})

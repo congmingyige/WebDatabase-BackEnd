@@ -4,6 +4,8 @@ sys.path.append('..')
 
 from django.db import models
 from user.models import User
+import json
+from datetime import datetime
 
 class Comment(models.Model):
     '''Table of comment
@@ -28,14 +30,20 @@ class Comment(models.Model):
     class Meta:
         db_table = 'comment_data'
         # bind them together to build the primary key
-        unique_together = (("author", "content"),)
+        unique_together = (("author", "time"),)
+
+    class TimeJsonEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                return json.JSONEncoder.default(self, obj)
 
     def __str__(self):
-        return '<Comment %r@%r>' % (self.author,self.id)
+        return '<Comment %r@%r>' % (self.author, self.id)
 
     def __repr__(self):
-        return '<Article %r@%r>' % (self.author,self.id)
-
+        return '<Article %r@%r>' % (self.author, self.id)
 
 class Article(models.Model):
     '''Table of article
@@ -68,8 +76,15 @@ class Article(models.Model):
         # bind them together to build the primary key
         unique_together = (("title", "author"),)
 
+    class CJsonEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                return json.JSONEncoder.default(self, obj)
+
     def __str__(self):
-        return '<Article %r@%r>' % (self.title,self.author)
+        return '<Article %r@%r>' % (self.author, self.time)
 
     def __repr__(self):
-        return '<Article %r@%r>' % (self.title,self.author)
+        return '<Article %r@%r>' % (self.author, self.time)
