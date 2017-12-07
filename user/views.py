@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
+from django.contrib.sessions.backends.db import SessionStore
 from user.models import User
 from backEnd import urls
 import re
@@ -11,7 +12,7 @@ account_code = {
     "username_invalid": 101,
     "password_invalid": 102,
     "username_existed": 103,  #for register
-    "username_not_existed": 105,  #for login
+    "username_not_exist": 105,  #for login
     "password_error": 106,
     "register_success": 110,
     "login_success": 120,
@@ -108,11 +109,14 @@ def login(request):
         else:
             new_user = User.objects.filter(phone=username)
         if not new_user:
-            return HttpResponse(account_code['username_not_existed'], content_type="text/plain")
+            return HttpResponse(account_code['username_not_exist'], content_type="text/plain")
         else:
             if new_user[0].password != pwd:
                 return HttpResponse(account_code['password_error'], content_type="text/plain")
-
+        '''s = SessionStore()
+        s['username'] = 'yqr'
+        s.save()
+        return HttpResponse(s.session_key)'''
         response = HttpResponse(account_code['login_success'], content_type="text/plain")
         response.set_cookie("username", username, max_age=1800)
         return response
@@ -155,7 +159,7 @@ def password_forget(request):
         else:
             new_user = User.objects.filter(phone=username)
         if not new_user:
-            return HttpResponse(account_code['username_not_existed'], content_type="text/plain")
+            return HttpResponse(account_code['username_not_exist'], content_type="text/plain")
         else:
             #   update the password
             new_user.update(password=pwd)

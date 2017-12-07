@@ -25,9 +25,8 @@ return_code = {
     'article_update_success': 123,
     'article_liked_success': 124,
     'article_not_liked_success': 125,
-    'article_user_show_success': 126,
-    'comment_create_success': 127,
-    'comment_delete_success': 128
+    'article_user_show_success': 126
+
 }
 
 
@@ -52,6 +51,7 @@ def article_comment_show(request, id_article):
         if article:
             # choose not put 'comments' into article.values_list
             # new_article_comments = article[0].comments.all().values_list('id', 'author__phone', 'author__email', 'time', 'content')
+            article.update(views=F('views')+1)
             article_comments = article[0].comments.all()
             new_article_comments = []
             for new_comment in article_comments:
@@ -176,13 +176,15 @@ def article_not_liked(request, id_article):
 def comment_create(request, id_article):
     if request.method == 'POST':
         data = json.loads(request.body)
+        id_article = data['id_article']
         article = Article.objects.filter(id=id_article)
         if article:
             author = User.objects.filter(id=1)  # change!!!
             content = data['content']
             comment = Comment(author=author[0], content=content)
             comment.save()
-            article[0].comments.add(comment)
+            article[0].comments.add(comment[0])
+
             comment.save()
             return HttpResponse(return_code['comment_create_success'], content_type="text/plain")
         # comment existed
@@ -205,30 +207,29 @@ def comment_delete(request, id_comment):
 
 
 def test():
+    '''
+    comment = Comment.objects.filter(id=44)
+    comment.delete()
+    '''
 
     '''
     author = User.objects.filter(id=3)
-    Comment.objects.create(author=author[0], content='haha')
+    comment = Comment(author=author[0], content='great')
+    comment.save()
+    article[0].comments.add(comment)
     '''
 
-
+    '''
+    comment = Comment.objects.filter(id=1)
     article = Article.objects.filter(id=1)
-    comment = Comment.objects.filter(id=29)
     article[0].comments.add(comment[0])
-    comment = Comment.objects.filter(id=30)
-    article[0].comments.add(comment[0])
-    comment = Comment.objects.filter(id=42)
-    article[0].comments.add(comment[0])
-
+    '''
 
     # return HttpResponse(json.dumps({'article': serializers.serialize("json", article)}))
 
-
     '''
     print(request.GET)
-    print('ok')
     data = json.loads(request.body)
-    print('ok')
     print(request.COOKIES)
     if 'username' in request.COOKIES:
         print(request.COOKIES['username'])
@@ -242,20 +243,8 @@ def test():
     return response
     '''
 
-
-    '''
-    print('ok')
-    print(request.body)
-
-    response = HttpResponse(json.dumps({'title': '1', 'author': '2', 'text': '3', 'comment': '4'}))
-    # response = HttpResponse(json.dumps({'title': '1', 'author': '2', 'text': '3', 'comment': '4'}))
-    response.set_cookie('username', 'user', max_age=1800)
-    return response
-
     # return HttpResponse(json.dumps({'title': '1', 'author': '2', 'text': '3', 'comment': '4'}))
     # return HttpResponseRedirect('http://localhost:8080/', json.dumps({'title':'title', 'author':'2', 'context':'3', 'comment':'4'}))
-
-    '''
 
 
 '''
