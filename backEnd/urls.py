@@ -41,7 +41,7 @@ urlpatterns = [
     url(r'^p/(\d+)/?', article_comment_show),
 
     # url(r'test/?', test)
-    url(r'/?', test)
+    url(r'/', test)
 ]
 
 '''

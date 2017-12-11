@@ -1,3 +1,0 @@
-
-print(None+1)
-

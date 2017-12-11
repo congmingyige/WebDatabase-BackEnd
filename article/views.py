@@ -25,8 +25,8 @@ return_code = {
     'article_update_success': 123,
     'article_liked_success': 124,
     'article_not_liked_success': 125,
-    'article_user_show_success': 126
-
+    'article_user_show_success': 126,
+    'comment_create_success': 127
 }
 
 
@@ -176,16 +176,13 @@ def article_not_liked(request, id_article):
 def comment_create(request, id_article):
     if request.method == 'POST':
         data = json.loads(request.body)
-        id_article = data['id_article']
         article = Article.objects.filter(id=id_article)
         if article:
             author = User.objects.filter(id=1)  # change!!!
             content = data['content']
             comment = Comment(author=author[0], content=content)
             comment.save()
-            article[0].comments.add(comment[0])
-
-            comment.save()
+            article[0].comments.add(comment)
             return HttpResponse(return_code['comment_create_success'], content_type="text/plain")
         # comment existed
         return HttpResponse(return_code['comment_existed'], content_type="text/plain")
