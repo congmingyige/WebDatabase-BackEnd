@@ -9,6 +9,8 @@ from user.models import User
 import re
 import json
 from django.db.models import F
+from django.contrib.sessions.backends.db import SessionStore
+from collections import defaultdict
 
 # Create your views here.
 return_code = {
@@ -49,13 +51,12 @@ def article_comment_show(request, id_article):
     if request.method == 'POST':
         article = Article.objects.filter(id=id_article)
         if article:
-            # choose not put 'comments' into article.values_list
-            # new_article_comments = article[0].comments.all().values_list('id', 'author__phone', 'author__email', 'time', 'content')
             article.update(views=F('views')+1)
-            article_comments = article[0].comments.all()
+            article = article[0]
+            article_comments = article.comments.all()
             new_article_comments = []
             for new_comment in article_comments:
-                dict_comment = {}
+                dict_comment = defaultdict(list)
                 dict_comment['id'] = new_comment.id
                 if new_comment.author.phone is None:
                     dict_comment['author'] = new_comment.author.email
@@ -64,8 +65,19 @@ def article_comment_show(request, id_article):
                 dict_comment['time'] = new_comment.time
                 dict_comment['content'] = new_comment.content
                 new_article_comments.append(dict_comment)
-            new_article = article.values_list('title', 'author__phone', 'author__email', 'time', 'text', 'views', 'liked')
-            return HttpResponse(json.dumps({'article': list(new_article), 'article_comments': new_article_comments
+
+            new_article = defaultdict(list)
+            new_article['title'] = article.title
+            if article.author.phone is None:
+                new_article['author'] = article.author.email
+            else:
+                new_article['author'] = article.author.phone
+            new_article['time'] = article.time
+            new_article['text'] = article.text
+            new_article['views'] = article.views
+            new_article['liked'] = article.liked
+
+            return HttpResponse(json.dumps({'article': new_article, 'article_comments': new_article_comments
                                             }, cls=Article.CJsonEncoder))
         # article not existed
         return HttpResponse(return_code['article_not_existed'], content_type="text/plain")
@@ -203,7 +215,35 @@ def comment_delete(request, id_comment):
     return HttpResponse(return_code['not_POST'], content_type="text/plain")
 
 
-def test():
+def test(request):
+    if request.method == 'POST':
+
+
+        print(request.META.get('HTTP_USERNAME', 'unknown'))
+        session = SessionStore()
+        session['username'] = 'abc'
+        session.save()
+        print(session.session_key)
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = "*"
+        response['username'] = session.session_key
+        return response
+
+
+
+
+        '''
+        if 'count' in request.session:
+            request.session['count'] += 1
+            return HttpResponse('new count=%s' % request.session['count'])
+        else:
+            request.session['count'] = 1
+            return HttpResponse('No count in session. Setting to 1')
+        '''
+
+
+    # return HttpResponse(return_code['article_not_existed'], content_type="text/plain")
+
     '''
     comment = Comment.objects.filter(id=44)
     comment.delete()
@@ -253,4 +293,8 @@ def test():
 2. In BackEnd :
     get messages : eval() : json(dict) -> str
     send messages : json.dumps() : json(dict) -> str
+'''
+
+'''
+# new_article = article.values_list('title', 'author__phone', 'author__email', 'time', 'text', 'views', 'liked')
 '''

@@ -124,7 +124,8 @@ CORS_ALLOW_HEADERS = [
     'authorization',
     'x-csrftoken',
     'username',
-    'password'
+    'password',
+    'id'
 ]
 
 # Internationalization
