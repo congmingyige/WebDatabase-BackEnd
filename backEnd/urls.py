@@ -16,9 +16,10 @@ Including another URLconf
 from django.conf.urls import url
 #from django.contrib import admin
 from user.views import login, register, password_forget, logout
-from article.views import article_show, article_comment_show, author_article, author_moments, \
-        article_create, article_update, article_delete, article_liked, article_not_liked, comment_create, comment_delete, test
-
+from article.views import  article_comments_show, article_show, comments_show,\
+        article_create, article_title_text, article_update, article_delete,\
+        article_liked, article_not_liked, article_collection, article_not_collection, comment_create, comment_delete, \
+        author_article, author_article_liked, author_article_collection, author_article_comment, author_moments, test
 
 # 从上到下识别，如果识别成功，下面的就不用再识别
 urlpatterns = [
@@ -29,16 +30,26 @@ urlpatterns = [
     url(r'^logout/?', logout),
 
     url(r'^p/create/?', article_create),
-    url(r'^p/(\d+)/article/?', article_show),
+    url(r'^p/(\d+)/article_title_text/?', article_title_text),
     url(r'^p/(\d+)/update/?', article_update),
     url(r'^p/(\d+)/delete/?', article_delete),
+
     url(r'^p/(\d+)/liked/?', article_liked),
     url(r'^p/(\d+)/not_liked/?', article_not_liked),
+    url(r'^p/(\d+)/collection/?', article_collection),
+    url(r'^p/(\d+)/not_collection/?', article_not_collection),
     url(r'^p/(\d+)/c/create/?', comment_create),
     url(r'^p/(\d+)/c/(\d+)/delete/?', comment_delete),
 
-    url(r'^u/(\d+)/p', author_article),
-    url(r'^p/(\d+)/?', article_comment_show),
+    url(r'^p/(\d+)/article/?', article_show),
+    url(r'^p/(\d+)/comments/?', comments_show),
+    url(r'^p/(\d+)/?', article_comments_show),
+
+    url(r'^a/(\d+)/article/?', author_article),
+    url(r'^a/(\d+)/liked/?', author_article_liked),
+    url(r'^a/(\d+)/collection/?', author_article_collection),
+    url(r'^a/(\d+)/comment/?', author_article_comment),
+    url(r'^a/(\d+)/moments/?', author_moments),
 
     url(r'test', test)
 ]
@@ -46,6 +57,7 @@ urlpatterns = [
 '''
 setting.py:
 
+1.
 app生成后
 INSTALLED_APPS 要加app名：user，article
 
@@ -56,5 +68,8 @@ Line 47 : #'django.middleware.csrf.CsrfViewMiddleware',
 3.
 CSS,JS和各种插件的位置
 Line 124~126
+
+4.
+前端传送headers到后端，headers的变量在CORS_ALLOW_HEADERS定义
 
 '''

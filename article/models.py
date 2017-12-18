@@ -62,14 +62,16 @@ class Article(models.Model):
     '''
 
     title = models.CharField(max_length=64)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
     time = models.DateTimeField(auto_now_add=True)
     text = models.TextField(null=True)
     views = models.PositiveIntegerField(default=0)
     comments = models.ManyToManyField(Comment)  # 多对多
-    liked = models.ManyToManyField(User)
+    liked = models.ManyToManyField(User, related_name='liked')
+    collection = models.ManyToManyField(User, related_name='collection')
     comments_count = models.PositiveIntegerField(default=0)
     liked_count = models.PositiveIntegerField(default=0)
+    collection_count = models.PositiveIntegerField(default=0)
 
     # 元数据
     class Meta:

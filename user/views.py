@@ -1,11 +1,9 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
-from django.core.urlresolvers import reverse
-from django.contrib.sessions.backends.db import SessionStore
+
 from user.models import User
-from backEnd import urls
+from django.shortcuts import HttpResponse
 import re
 import json
+from django.contrib.sessions.backends.db import SessionStore
 
 account_code = {
     "not_POST": 100,
@@ -113,13 +111,17 @@ def login(request):
         else:
             if new_user[0].password != pwd:
                 return HttpResponse(account_code['password_error'], content_type="text/plain")
-        '''s = SessionStore()
-        s['username'] = 'yqr'
-        s.save()
-        return HttpResponse(s.session_key)'''
-        response = HttpResponse(account_code['login_success'], content_type="text/plain")
-        response.set_cookie("username", username, max_age=1800)
-        return response
+
+        session = SessionStore()
+        session['id_user'] = new_user[0].id
+        session.save()
+
+        return HttpResponse(json.dumps({'sessionKey': session.session_key,
+                                        'code': account_code['login_success']}))
+
+        # response = HttpResponse(account_code['login_success'], content_type="text/plain")
+        # response.set_cookie("username", username, max_age=1800)
+
     #   not a POST request
     elif request.method == 'OPTIONS':
         response = HttpResponse(account_code['options_request'], content_type="text/plain")
