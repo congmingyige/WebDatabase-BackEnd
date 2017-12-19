@@ -53,6 +53,10 @@ def article_comments_show(request, id_article):
                 if_collection = 1
             else:
                 if_collection = 0
+            if article[0].author.id == id_user:
+                if_modify = 1
+            else:
+                if_modify = 0
             article = article[0]
 
             article_comments = article.comments.all()
@@ -86,6 +90,7 @@ def article_comments_show(request, id_article):
                                             'article_comments': new_article_comments,
                                             'if_liked': if_liked,
                                             'if_collection': if_collection,
+                                            'if_modify': if_modify,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # article not existed
@@ -117,6 +122,10 @@ def article_show(request, id_article):
                 if_collection = 1
             else:
                 if_collection = 0
+            if article[0].author.id == id_user:
+                if_modify = 1
+            else:
+                if_modify = 0
             article = article[0]
 
             new_article = defaultdict(list)
@@ -135,6 +144,7 @@ def article_show(request, id_article):
             return HttpResponse(json.dumps({'article': new_article,
                                             'if_liked': if_liked,
                                             'if_collection': if_collection,
+                                            'if_modify': if_modify,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # article not existed
@@ -156,18 +166,19 @@ def comments_show(request, id_article):
             article_comments = article.comments.all()
 
             data = json.loads(request.body)
-            comments_round = data['comments_round']
-            if comments_round * comments_round_count <= len(article_comments):
-                end_number = comments_round * comments_round_count
-                vis = 0
+            comments_begin_number = data['comments_number']
+            article_comments_count = len(article_comments)
+            if comments_begin_number + comments_round_count <= article_comments_count:
+                comments_number = comments_begin_number + comments_round_count
             else:
-                end_number = len(article_comments)
-                vis = 1
+                comments_number = len(article_comments)
 
+            print(article_comments_count)
+            print(comments_begin_number)
             new_article_comments = []
-            for index in range(comments_round*comments_round_count-comments_round_count, end_number):
-                dict_comment = defaultdict(list)
+            for index in range(article_comments_count-comments_begin_number-1, article_comments_count-comments_number-1, -1):
                 new_comment = article_comments[index]
+                dict_comment = defaultdict(list)
                 dict_comment['id'] = new_comment.id
                 dict_comment['id_author'] = new_comment.author.id
                 if new_comment.author.phone is None:
@@ -179,7 +190,7 @@ def comments_show(request, id_article):
                 new_article_comments.append(dict_comment)
 
             return HttpResponse(json.dumps({'article_comments': new_article_comments,
-                                            'comments_cross_boundary': vis,
+                                            'comments_number': comments_number,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # article not existed
