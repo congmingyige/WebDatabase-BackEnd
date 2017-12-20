@@ -530,8 +530,18 @@ def author_article_liked(request, id_author):
         author = User.objects.filter(id=id_author)
         if author:
             article = Article.objects.filter(liked=id_author)
+            new_article = []
+            for article_s in article:
+                dict_article = defaultdict(list)
+                dict_article['id'] = article_s.id
+                dict_article['title'] = article_s.title
+                if article_s.author.phone is None:
+                    dict_article['author'] = article_s.author.email
+                else:
+                    dict_article['author'] = article_s.author.phone
+                new_article.append(dict_article)
 
-            return HttpResponse(json.dumps({'article': serializers.serialize("json", article),
+            return HttpResponse(json.dumps({'article': new_article,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # author not existed
@@ -550,8 +560,18 @@ def author_article_collection(request, id_author):
         author = User.objects.filter(id=id_author)
         if author:
             article = Article.objects.filter(collection=id_author)
+            new_article = []
+            for article_s in article:
+                dict_article = defaultdict(list)
+                dict_article['id'] = article_s.id
+                dict_article['title'] = article_s.title
+                if article_s.author.phone is None:
+                    dict_article['author'] = article_s.author.email
+                else:
+                    dict_article['author'] = article_s.author.phone
+                new_article.append(dict_article)
 
-            return HttpResponse(json.dumps({'article': serializers.serialize("json", article),
+            return HttpResponse(json.dumps({'article': new_article,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # author not existed
@@ -570,9 +590,19 @@ def author_article_comment(request, id_author):
         author = User.objects.filter(id=id_author)
         if author:
             article = Article.objects.filter(comments=id_author)
-            # need id number ???
 
-            return HttpResponse(json.dumps({'article': serializers.serialize("json", article),
+            new_article = []
+            for article_s in article:
+                dict_article = defaultdict(list)
+                dict_article['id'] = article_s.id
+                dict_article['title'] = article_s.title
+                if article_s.author.phone is None:
+                    dict_article['author'] = article_s.author.email
+                else:
+                    dict_article['author'] = article_s.author.phone
+                new_article.append(dict_article)
+
+            return HttpResponse(json.dumps({'article': new_article,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # author not existed
