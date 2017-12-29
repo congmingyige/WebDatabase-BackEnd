@@ -16,6 +16,9 @@ class User(models.Model):
     phone = models.CharField(max_length=11, unique=True, null=True)
     email = models.EmailField(max_length=64, unique=True, null=True)
     password = models.CharField(max_length=64)
+    sex = models.CharField(max_length=5, default="Man")
+    introduction = models.CharField(max_length=128, null=True)
+    resident = models.CharField(max_length=16, null=True)
 
     class Meta:
         db_table = 'user_data'

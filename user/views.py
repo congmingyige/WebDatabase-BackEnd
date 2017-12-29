@@ -16,7 +16,10 @@ account_code = {
     "login_success": 120,
     "reset_password_success": 130,
     "logout_success": 140,
-    "options_request": 150
+    "logout_error": 141,
+    "options_request": 150,
+    "editProfile_success": 160,
+    "getProfile_success": 170
 }
 
 
@@ -43,10 +46,16 @@ def register(request):
             at_existed = False
             pattern = re.compile(r"^\d{11}$")
         if re.match(pattern, username) is None:
-            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_invalid'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
         #   check the validity of password
         if not 6 <= len(pwd) <= 64:
-            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['password_invalid'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
 
         #   check up whether the account has existed
         if at_existed:
@@ -54,24 +63,42 @@ def register(request):
         else:
             new_user = User.objects.filter(phone=username)
         if new_user:
-            return HttpResponse(account_code['username_existed'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_existed'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
         else:
             #   create a new user in the database
             if at_existed:
-                User.objects.create(email=username, password=pwd)
+                new_user = User(email=username, password=pwd)
+                new_user.save()
             else:
-                User.objects.create(phone=username, password=pwd)
+                new_user = User(phone=username, password=pwd)
+                new_user.save()
 
-        response = HttpResponse(account_code['register_success'], content_type="text/plain")
-        response.set_cookie("username", username, max_age=1800)
-        return response
+        session = SessionStore()
+        session['username'] = username
+        session['id_user'] = new_user.id
+        session.save()
+
+        return HttpResponse(json.dumps({
+                                   'id_user': new_user.id,
+                                   'code':account_code['register_success'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
     #   not a POST request
     elif request.method == 'OPTIONS':
-        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response = HttpResponse(json.dumps({
+                                   'code':account_code['options_request'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
         response['Access-Control-Allow-Origin'] = "*"
         return response
     else:
-        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+        return HttpResponse(json.dumps({
+                                   'code':account_code['not_POST'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
 
 
 '''
@@ -96,10 +123,16 @@ def login(request):
             at_existed = False
             pattern = re.compile(r"^\d{11}$")
         if re.match(pattern, username) is None:
-            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_invalid'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         #   check the validity of password
         if not 6 <= len(pwd) <= 64:
-            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['password_invalid'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
 
         #   check up whether the account has existed
         if at_existed:
@@ -107,28 +140,42 @@ def login(request):
         else:
             new_user = User.objects.filter(phone=username)
         if not new_user:
-            return HttpResponse(account_code['username_not_exist'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_not_exist'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         else:
             if new_user[0].password != pwd:
-                return HttpResponse(account_code['password_error'], content_type="text/plain")
-
-        session = SessionStore()
-        session['id_user'] = new_user[0].id
-        session.save()
-
-        return HttpResponse(json.dumps({'sessionKey': session.session_key,
-                                        'code': account_code['login_success']}))
-
-        # response = HttpResponse(account_code['login_success'], content_type="text/plain")
-        # response.set_cookie("username", username, max_age=1800)
+                return HttpResponse(json.dumps({
+                                   'code':account_code['password_error'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
+        #   create a session
+        s = SessionStore()
+        s['username'] = username
+        s['id_user'] = new_user[0].id
+        s.save()
+        response = HttpResponse(json.dumps({
+                                   'id_user': new_user[0].id,
+                                   'code':account_code['login_success'],
+                                   'sessionKey': s.session_key,
+                                   'username': username
+                                }),content_type="text/plain")
+        return response
 
     #   not a POST request
     elif request.method == 'OPTIONS':
-        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response = HttpResponse(json.dumps({
+                                   'code':account_code['options_request'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         response['Access-Control-Allow-Origin'] = "*"
         return response
     else:
-        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+        return HttpResponse(json.dumps({
+                                   'code':account_code['not_POST'],
+                                   'sessionKey': ''
+                            }),content_type="text/plain")
 
 
 '''
@@ -150,10 +197,16 @@ def password_forget(request):
             at_existed = False
             pattern = re.compile(r"^\d{11}$")
         if re.match(pattern, username) is None:
-            return HttpResponse(account_code['username_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_invalid'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         #   check the validity of password
         if not 6 <= len(pwd) <= 64:
-            return HttpResponse(account_code['password_invalid'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['password_invalid'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
 
         #   check up whether the account has existed
         if at_existed:
@@ -161,21 +214,32 @@ def password_forget(request):
         else:
             new_user = User.objects.filter(phone=username)
         if not new_user:
-            return HttpResponse(account_code['username_not_exist'], content_type="text/plain")
+            return HttpResponse(json.dumps({
+                                   'code':account_code['username_not_exist'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         else:
             #   update the password
             new_user.update(password=pwd)
 
-        response = HttpResponse(account_code['reset_password_success'], content_type="text/plain")
-        response.set_cookie("username", username, max_age=1800)
-        return response
+        return HttpResponse(json.dumps({
+                                   'code':account_code['reset_password_success'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
     #   not a POST request
     elif request.method == 'OPTIONS':
-        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response = HttpResponse(json.dumps({
+                                   'code':account_code['options_request'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         response['Access-Control-Allow-Origin'] = "*"
         return response
     else:
-        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+        return HttpResponse(json.dumps({
+                                   'code':account_code['not_POST'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
+
 
 
 '''
@@ -184,17 +248,74 @@ def password_forget(request):
 '''
 def logout(request):
     if request.method == 'POST':
-        response = HttpResponse(account_code['logout_success'], content_type="text/plain")
-        response.delete_cookie('username')
-        return response
+        sessionKey = request.META.get('HTTP_SESSIONKEY', None)
+        if(sessionKey):
+            s = SessionStore(session_key=sessionKey)
+            del s['username']
+            return HttpResponse(json.dumps({
+                                   'code':account_code['logout_success'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
+        else:
+            return HttpResponse(json.dumps({
+                                   'code':account_code['logout_error'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
     elif request.method == 'OPTIONS':
-        response = HttpResponse(account_code['options_request'], content_type="text/plain")
+        response = HttpResponse(json.dumps({
+                                   'code':account_code['options_request'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
         response['Access-Control-Allow-Origin'] = "*"
         return response
     else:
-        return HttpResponse(account_code['not_POST'], content_type="text/plain")
+        return HttpResponse(json.dumps({
+                                   'code':account_code['not_POST'],
+                                   'sessionKey': ''
+                                }),content_type="text/plain")
 
 
+def editProfile(request, id_user):
+    if request.method == 'POST':
+        post = json.loads(request.body)
+        s = SessionStore(session_key=post['sessionKey'])
+        if(s.get('username', False)):
+            if "@" in s['username']:
+                user = User.objects.get(email=s['username'])
+            else:
+                user = User.objects.get(phone=s['username'])
+            if post['name'] == 'sex':
+                user.sex = post['value']
+            elif post['name'] == 'introduction':
+                user.introduction = post['value']
+            elif post['name'] == 'resident':
+                user.resident = post['value']
+            user.save()
+            return HttpResponse('OK', content_type="text/plain")
+        else:
+            return HttpResponse("OJ8K", content_type="text/plain")
+    else:
+        return HttpResponse("OJ8K", content_type="text/plain")
+
+
+def getProfile(request, id_user):
+    if request.method == 'POST':
+        s = SessionStore(session_key=request.body)
+        if(s.get('username', False)):
+            if "@" in s['username']:
+                user = User.objects.get(email=s['username'])
+            else:
+                user = User.objects.get(phone=s['username'])
+            info = {
+                'sex': user.sex,
+                'resident': user.resident,
+                'introduction': user.introduction
+            }
+            return HttpResponse(json.dumps(info), content_type="text/plain")
+        else:
+            return HttpResponse("OJ8K", content_type="text/plain")
+    else:
+        return HttpResponse("OJ8K", content_type="text/plain")
 
 '''
 To add:

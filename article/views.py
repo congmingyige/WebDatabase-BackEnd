@@ -1,4 +1,4 @@
-from article.models import Comment, Article
+from article.models import Comment, Article, Moment
 from user.models import User
 from django.shortcuts import HttpResponse
 import json
@@ -499,6 +499,7 @@ def author_article(request, id_author):
                 dict_article = defaultdict(list)
                 dict_article['id'] = article_s.id
                 dict_article['title'] = article_s.title
+                dict_article['id_author'] = article_s.author.id
                 if article_s.author.phone is None:
                     dict_article['author'] = article_s.author.email
                 else:
@@ -535,6 +536,7 @@ def author_article_liked(request, id_author):
                 dict_article = defaultdict(list)
                 dict_article['id'] = article_s.id
                 dict_article['title'] = article_s.title
+                dict_article['id_author'] = article_s.author.id
                 if article_s.author.phone is None:
                     dict_article['author'] = article_s.author.email
                 else:
@@ -565,13 +567,19 @@ def author_article_collection(request, id_author):
                 dict_article = defaultdict(list)
                 dict_article['id'] = article_s.id
                 dict_article['title'] = article_s.title
+                dict_article['id_author'] = article_s.author.id
                 if article_s.author.phone is None:
                     dict_article['author'] = article_s.author.email
                 else:
                     dict_article['author'] = article_s.author.phone
                 new_article.append(dict_article)
 
-            return HttpResponse(json.dumps({'article': new_article,
+            if author[0].phone is None:
+                author_name = author[0].email
+            else:
+                author_name = author[0].phone
+            return HttpResponse(json.dumps({'author_name': author_name,
+                                            'article': new_article,
                                             'sessionKey': session_key,
                                             'code': return_code['article_comments_show_success']}, cls=Article.CJsonEncoder))
         # author not existed
@@ -596,6 +604,7 @@ def author_article_comment(request, id_author):
                 dict_article = defaultdict(list)
                 dict_article['id'] = article_s.id
                 dict_article['title'] = article_s.title
+                dict_article['id_author'] = article_s.author.id
                 if article_s.author.phone is None:
                     dict_article['author'] = article_s.author.email
                 else:

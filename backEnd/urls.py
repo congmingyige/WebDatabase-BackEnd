@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 #from django.contrib import admin
-from user.views import login, register, password_forget, logout
+from user.views import login, register, password_forget, logout, editProfile, getProfile
 from article.views import  article_comments_show, article_show, comments_show,\
         article_create, article_title_text, article_update, article_delete,\
         article_liked, article_not_liked, article_collection, article_not_collection, comment_create, comment_delete, \
@@ -50,6 +50,8 @@ urlpatterns = [
     url(r'^a/(\d+)/collection/?', author_article_collection),
     url(r'^a/(\d+)/comment/?', author_article_comment),
     url(r'^a/(\d+)/moments/?', author_moments),
+    url(r'^a/(\d+)/editProfile/?', editProfile),
+    url(r'^a/(\d+)/getProfile/?', getProfile),
 
     url(r'test', test)
 ]

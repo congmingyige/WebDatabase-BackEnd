@@ -92,3 +92,31 @@ class Article(models.Model):
 
     def __repr__(self):
         return '<Article %r@%r>' % (self.author, self.time)
+
+
+class Moment(models.Model):
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    mode = models.PositiveIntegerField(default=0)
+    # 1: article_create 2:article_update 3:article_delete 4:comment_create 5:comment_delete
+    # 6: liked article 7:cancel liked article 8: collect article 9:cancel collect article
+    time = models.DateTimeField(auto_now_add=True)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article')
+    comment = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comment')
+
+    class Meta:
+        db_table = 'moment_data'
+        unique_together = (("author", "time"),)
+
+    class TimeJsonEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                return json.JSONEncoder.default(self, obj)
+
+    def __str__(self):
+        return '<Moment %r@%r>' % (self.author, self.id)
+
+    def __repr__(self):
+        return '<Moment %r@%r>' % (self.author, self.id)
